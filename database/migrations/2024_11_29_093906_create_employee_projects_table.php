@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -17,6 +18,7 @@ return new class extends Migration
                     ->constrained('employees')
                     ->onDelete('cascade')
                     ->onUpdate('cascade')
+                    ->name('fk_employee_projects_employee_id')
                     ->index();
             $table->foreignId('project_id')
                     ->constrained('projects')
