@@ -1,14 +1,16 @@
 <?php
+declare(strict_types=1);
+
 namespace App\Enums;
 
 class Gender{
-    public const Male = 'M';
-    public const Female = 'F';
-    public const Others = 'O';
+    public const MALE = 'M';
+    public const FEMALE = 'F';
+    public const OTHERS = 'O';
 
     public const ALL=[
-        self::Male,
-        self::Female,
-        self::Others,
+        self::MALE,
+        self::FEMALE,
+        self::OTHERS,
     ];
 }
