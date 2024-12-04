@@ -1,7 +1,10 @@
 <?php
+declare(strict_types=1);
 
 namespace Database\Factories;
 
+use App\Enums\Gender;
+use App\Models\Role;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
@@ -17,12 +20,14 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
+        $randomIndex = rand(0, 2);
         return [
+            'gender'=> Gender::ALL[$randomIndex],
+            'join_date'=>fake()->date(),
+            'role_id'=> Role::inRandomOrder()->first()->id,
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
-            'email_verified_at' => now(),
-            'password' => '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
-            'remember_token' => Str::random(10),
+            'password' => bcrypt('123456'),
         ];
     }
 

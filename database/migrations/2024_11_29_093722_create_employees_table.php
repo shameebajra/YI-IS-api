@@ -17,7 +17,7 @@ return new class extends Migration
         Schema::create(TableNames::EMPLOYEES, function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->const ('gender',Gender::ALL);
+            $table->enum ('gender',Gender::ALL);
             $table->date('join_date');
             $table->foreignId('role_id')
                   ->constrained('roles')
