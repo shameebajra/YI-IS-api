@@ -4,17 +4,17 @@ declare(strict_types=1);
 namespace App\Enums;
 
 class RoleWeight{
-    public const ROLE_1 = 1;
-    public const ROLE_2 = 2;
-    public const ROLE_3 = 3;
-    public const ROLE_4 = 4;
-    public const ROLE_5 = 5;
+    public const INTERN = 1;
+    public const SEII = 2;
+    public const SEI = 3;
+    public const PM = 4;
+    public const HR = 5;
 
     public const WEIGHTS = [
-        self::ROLE_1,
-        self::ROLE_2,
-        self::ROLE_3,
-        self::ROLE_4,
-        self::ROLE_5,
+        self::HR,
+        self::PM,
+        self::SEI,
+        self::SEII,
+        self::INTERN,
     ];
 }

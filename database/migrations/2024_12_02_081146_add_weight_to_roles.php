@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 use App\Enums\RoleWeight;
 use Illuminate\Database\Migrations\Migration;

@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Database\Seeders;
 
@@ -16,14 +17,15 @@ class RoleSeeder extends Seeder
     public function run(): void
     {
         $roles= [
-            ['name'=> RoleName::HR, 'weight'=> RoleWeight::ROLE_5],
-            ['name'=> RoleName::PM, 'weight'=> RoleWeight::ROLE_4],
-            ['name'=> RoleName::SEI, 'weight'=> RoleWeight::ROLE_3],
-            ['name'=> RoleName::SEII, 'weight'=> RoleWeight::ROLE_2],
-            ['name'=> RoleName::INTERN, 'weight'=> RoleWeight::ROLE_1],
+            ['name'=> RoleName::HR, 'weight'=> RoleWeight::HR],
+            ['name'=> RoleName::PM, 'weight'=> RoleWeight::PM],
+            ['name'=> RoleName::SEI, 'weight'=> RoleWeight::SEI],
+            ['name'=> RoleName::SEII, 'weight'=> RoleWeight::SEII],
+            ['name'=> RoleName::INTERN, 'weight'=> RoleWeight::INTERN],
 
 
         ];
+
         DB::table('roles')->insert($roles);
 
     }

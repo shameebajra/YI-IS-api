@@ -22,10 +22,17 @@ class RegisterController extends Controller
             'join_date'=> $request->join_date,
             'role'=> $request->role,
         ]);
-        return ("Registration Successful.");
+
+        return response()->json([
+            'message' => 'Registration successful.'
+        ], 200);
+
     }catch(Exception $e){
         Log::error('Registration error:'. $e);
-        return $e;
+
+        return response()->json([
+            'message' => 'Registration failed. Please try again.'
+        ], 400);
     }
    }
 }

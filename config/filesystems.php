@@ -43,12 +43,13 @@ return [
             'visibility' => 'public',
             'throw' => false,
         ],
+
         //csv data
         'data' => [
             'driver' => 'local',
             'root' => storage_path('data'),
             'url' => env('APP_URL').'/storage',
-            'visibility' => 'public',
+            'visibility' => 'private',
             'throw' => false,
         ],
 

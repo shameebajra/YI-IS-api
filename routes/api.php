@@ -1,8 +1,10 @@
 <?php
+declare(strict_types=1);
 
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -24,13 +26,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::post('/register', [RegisterController::class,'register']);
 Route::post('/login',[LoginController::class,'login']);
 
-Route::controller(EmployeeController::class)->group(function(){
-    Route::post('/create','create');
-    Route::get('/employees-data','getAllEmployees');
-    Route::get('/employee/{id}','getEmployee');
-    Route::put('/employee/{id}','updateEmployee');
-    Route::delete('/employee/{id}','deleteEmployee');
-});
 
-
+Route::resource('/employee',EmployeeController::class);
 

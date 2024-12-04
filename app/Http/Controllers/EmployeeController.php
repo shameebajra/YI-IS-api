@@ -1,22 +1,76 @@
 <?php
-
 declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Enums\Gender;
-use App\Models\Role;
+use App\Http\Requests\EmployeeRequest;
 use App\Models\User;
-use Carbon\Carbon;
+use App\Models\Role;
 use Exception;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use App\Enums\Gender;
+
 
 class EmployeeController extends Controller
 {
+       /**
+     * Read csv file from storage
+     */
+    public function readCsv()
+    {
+        try {
+            $csvContents = Storage::disk('data')->get('users.csv');
+
+            return $csvContents;
+        } catch (Exception $e) {
+            Log::error('Error reading file: ' . $e->getMessage());
+
+            return response()->json([
+                "message" => "CSV file not found or unable to read."
+            ], 404);
+
+        }
+    }
+
+    /**
+     * Display a listing of the resource.
+     */
+    public function index()
+    {
+        try {
+            $employees = User::all();
+
+            if ($employees->isEmpty()) {
+                return response()->json([
+                    "message" => "No employees found."
+                ], 404);
+            }
+
+            return response()->json($employees);
+        } catch (Exception $e) {
+            Log::error('Error fetching employees: ' . $e->getMessage());
+
+            return response()->json([
+                "message" => "An error occurred while retrieving employee data."
+            ], 500);
+        }
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
     public function create()
+    {
+        //
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
     {
         try {
             //read csv file
@@ -39,26 +93,24 @@ class EmployeeController extends Controller
                     $this->makeEmployee($email, $name, $password, $roleId, $randomGender);
                 }
             }
-            return response()->json(["message" => "Employee Created Successfully."], 201);
+
+            return response()->json([
+                "message" => "Employee created successfully."
+            ], 201);
+
         } catch (Exception $e) {
-            logger($e);
-            Log::error('Error: ' . $e->getMessage());
+            Log::error('Error creating employees: ' . $e->getMessage());
+
+            return response()->json([
+                "message" => "Failed to create employee records."
+            ], 500);
         }
     }
 
-    public function readCsv()
-    {
-        try {
-            $csvContents = Storage::disk('data')->get('users.csv');
-            return $csvContents;
-        } catch (Exception $e) {
-            Log::error('Error reading file: ' . $e->getMessage());
-        }
-    }
-
-    function generateEmailAddress(string $firstName, string $lastName)
+ function generateEmailAddress(string $firstName, string $lastName)
     {
         $randomNumber = rand(1, 100);
+
         return $firstName . '.' . $lastName . $randomNumber . '@gmail.com';
     }
 
@@ -79,56 +131,69 @@ class EmployeeController extends Controller
         return bcrypt($dummyPassword);
     }
 
-    function makeEmployee($email, $name, $password, $roleId, $randomGender)
+    function makeEmployee(string $email, string $name, string $password, int $roleId, int $randomGender)
     {
         $employee = new User();
+
         $employee->name = $name;
         $employee->email = $email;
         $employee->password = $password;
         $employee->gender = Gender::ALL[$randomGender];
         $employee->join_date = Carbon::now();
         $employee->role_id = $roleId;
-
         $employee->created_at = Carbon::now();
         $employee->updated_at = Carbon::now();
+
         $employee->save();
     }
 
-    public function getAllEmployees()
-    {
-        try {
-            $employees = User::all();
-            return $employees;
-        } catch (Exception $e) {
-            logger($e);
-            Log::error('Error: ' . $e->getMessage());
-        }
-    }
-
-    public function getEmployee($id)
+    /**
+     * Display the specified resource.
+     */
+    public function show(string $id)
     {
         try {
             $employee = User::findOrFail($id);
+
             return $employee;
         } catch (Exception $e) {
-            logger($e);
-            Log::error('Error: ' . $e->getMessage());
+            Log::error('Error fetching employee: ' . $e->getMessage());
+
+            return response()->json([
+                "message" => "Employee not found."
+            ], 404);
+
         }
     }
 
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(string $id)
+    {
+        //
+    }
 
-    public function updateEmployee(Request $request, $id)
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(EmployeeRequest $request, string $id)
     {
         try {
             $employee = User::findOrFail($id);
+
             $updatable = $this->getUpdatables($request->toArray());
             $employee->update($updatable);
 
-            return response()->json(["message" => "Successfully employee record updated."]);
+            return response()->json([
+                "message" => "Employee record updated successfully."
+            ], 200);
         } catch (Exception $e) {
-            logger($e);
-            Log::error('Error: ' . $e->getMessage());
-            return response()->json(["message" => "Unsuccessfull employee record update."]);
+            Log::error('Error updating employee: ' . $e->getMessage());
+
+            return response()->json([
+                "message" => "Failed to update employee record."
+            ], 500);
         }
     }
 
@@ -149,23 +214,29 @@ class EmployeeController extends Controller
                 $returnValue[$updatableValue] = $requestValues[$updatableValue];
             }
         }
+
         return $returnValue;
     }
 
-    public function deleteEmployee($id)
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(string $id)
     {
         try {
             $employee = User::findOrFail($id);
 
             $employee->delete();
 
-            return response()->json(["message" => "Employee record deleted successfully"]);
+            return response()->json([
+                "message" => "Employee record deleted successfully"
+            ],200);
         } catch (Exception $e) {
-            logger($e);
-            Log::error('Error: ' . $e->getMessage());
+            Log::error('Error deleting employee: ' . $e->getMessage());
+
+            return response()->json([
+                "message" => "Employee not found or unable to delete."
+            ], 404);
         }
     }
-
-
-
 }

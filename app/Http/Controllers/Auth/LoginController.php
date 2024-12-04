@@ -14,16 +14,22 @@ class LoginController extends Controller
      public function login(Request $request){
         try{
             $credentials = $request->only("email","password");
-            // dd($request->toArray());
-            if(Auth::attempt($credentials)){
-                return response()->json(['message' => 'Logged in successful.'], 200);
-            }else{
-                return response()->json(['message' => 'Error logging in'], 401);
 
+            if(Auth::attempt($credentials)){
+                return response()->json([
+                    'message' => 'Logged in successfully.'
+                ], 200);
+            } else{
+                return response()->json([
+                    'message' => 'Invalid credentials.'
+                ], 401);
             }
         }catch(Exception $e){
             Log::error('Log in error:'. $e);
-            return $e;
+
+            return response()->json([
+                'message' => 'Error logging in.'
+            ], 401);
         }
      }
 }
