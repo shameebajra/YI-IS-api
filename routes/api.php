@@ -28,6 +28,6 @@ Route::post('/register', [RegisterController::class,'register']);
 Route::post('/login',[LoginController::class,'login']);
 
 
-Route::resource('/employee',EmployeeController::class);
+Route::resource('/employee',EmployeeController::class)->except('create','edit');
 
-Route::resource('/vehicle',VehicleController::class);
+Route::resource('/vehicle',VehicleController::class)->except('create','edit');
