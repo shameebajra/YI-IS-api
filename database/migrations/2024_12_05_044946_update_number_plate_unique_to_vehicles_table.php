@@ -1,5 +1,4 @@
 <?php
-declare(strict_types=1);
 
 use App\Enums\TableNames;
 use Illuminate\Database\Migrations\Migration;
@@ -13,9 +12,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table(TableNames::EMPLOYEES, function (Blueprint $table) {
-            $table->string('email')->unique();
-            $table->string('password');
+        Schema::table(TableNames::VEHICLES, function (Blueprint $table) {
+            $table->unique('number_plate');
         });
     }
 
@@ -24,8 +22,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table(TableNames::EMPLOYEES, function (Blueprint $table) {
-            //
+        Schema::table(TableNames::VEHICLES, function (Blueprint $table) {
+            $table->dropUnique('number_plate');
         });
     }
 };
