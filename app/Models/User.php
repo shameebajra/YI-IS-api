@@ -57,7 +57,7 @@ class User extends Authenticatable
         return $this->belongsTo(Role::class);
     }
 
-    public function vehicle(){
+    public function vehicles(){
         return $this->hasMany(Vehicle::class);
     }
 

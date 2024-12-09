@@ -7,6 +7,7 @@ use App\Models\Project;
 use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -184,14 +185,7 @@ class ProjectController extends Controller
             'is_domestic',
         ];
 
-        $returnValue = [];
+        return Arr::only($requestValues, $updatableKeys);
 
-        foreach ($updatableKeys as $updatableValue) {
-            if (array_key_exists($updatableValue, $requestValues)) {
-                $returnValue[$updatableValue] = $requestValues[$updatableValue];
-            }
-        }
-
-        return $returnValue;
     }
 }
