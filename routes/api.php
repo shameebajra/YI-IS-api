@@ -35,4 +35,4 @@ Route::resource('/vehicle',VehicleController::class)->except('create','edit');
 Route::resource('/project',ProjectController::class)->except('create','edit');
 
 Route::post(uri: '/employees',action: [EmployeeController::class, 'storeEmployees']);
-Route::delete('/employees/{ids}', [EmployeeController::class, 'deleteEmployees']);
+Route::delete('/employees', [EmployeeController::class, 'deleteEmployees']);
