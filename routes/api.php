@@ -4,6 +4,7 @@ declare(strict_types=1);
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VehicleController;
 use Illuminate\Http\Request;
@@ -31,3 +32,5 @@ Route::post('/login',[LoginController::class,'login']);
 Route::resource('/employee',EmployeeController::class)->except('create','edit');
 
 Route::resource('/vehicle',VehicleController::class)->except('create','edit');
+
+Route::resource('/project',ProjectController::class)->except('create','edit');

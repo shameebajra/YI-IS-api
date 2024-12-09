@@ -15,4 +15,10 @@ class Vehicle extends Model
         'vehicle_info',
         'employee_id',
     ];
+
+    public function user(){
+        return $this->belongsTo(User::class);
+    }
+
+
 }
