@@ -41,7 +41,7 @@ class EmployeeController extends Controller
     public function index()
     {
         try {
-            $employees = User::all();
+            $employees = User::paginate(25);
 
             if ($employees->isEmpty()) {
                 return response()->json([
@@ -236,6 +236,52 @@ class EmployeeController extends Controller
 
             return response()->json([
                 "message" => "Employee not found or unable to delete."
+            ], 404);
+        }
+    }
+
+    public function storeEmployees(Request $request){
+        try{
+
+            $employees = $request->all();
+
+            foreach($employees as $employee){
+                User::create(
+                    [
+                        'name' => $employee['name'],
+                        'email' => $employee['email'],
+                        'join_date' => $employee['join_date'],
+                        'password' => bcrypt($employee['password']),
+                        'role_id' => $employee['role_id'],
+                        'gender' => $employee['gender'],
+                    ]);
+            }
+
+            return response()->json([
+                "message" => "Employees created successfully."
+            ], 201);
+
+        } catch (Exception $e) {
+            Log::error('Error creating employees: ' . $e->getMessage());
+
+            return response()->json([
+                "message" => "Failed to create employees records."
+            ], 500);
+        }
+    }
+    public  function deleteEmployees(string $ids){
+        try{
+            $idsArray = explode(',',$ids);
+            User::whereIn('id',$idsArray)->delete();
+
+            return response()->json([
+                    "message" => "Employee records deleted successfully"
+                ],200);
+        } catch (Exception $e) {
+            Log::error('Error deleting employees: ' . $e->getMessage());
+
+            return response()->json([
+                "message" => "Employees not found or unable to delete."
             ], 404);
         }
     }
