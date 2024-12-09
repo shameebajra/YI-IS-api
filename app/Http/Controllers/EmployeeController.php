@@ -12,7 +12,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use App\Enums\Gender;
-
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rules\Exists;
 
 class EmployeeController extends Controller
 {
@@ -38,10 +40,13 @@ class EmployeeController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $employees = User::all();
+            $limit = $request->query('limit', 25);
+            $page = $request->query('page', 1);
+
+            $employees = User::paginate($limit, ['*'], 'page', $page);
 
             if ($employees->isEmpty()) {
                 return response()->json([
@@ -236,6 +241,62 @@ class EmployeeController extends Controller
 
             return response()->json([
                 "message" => "Employee not found or unable to delete."
+            ], 404);
+        }
+    }
+
+    public function storeEmployees(Request $request){
+        try{
+            $payload = $request->get('data');
+            $employees = Arr::get($payload, 'employees', []);
+
+            User::insert($employees);
+
+            return response()->json([
+                "message" => "Employees created successfully."
+            ], 201);
+
+        } catch (Exception $e) {
+            Log::error('Error creating employees: ' . $e->getMessage());
+
+            return response()->json([
+                "message" => "Failed to create employees records."
+            ], 500);
+        }
+    }
+
+    public  function deleteEmployees(Request $request){
+        DB::beginTransaction();
+        try{
+            $ids = $request->query('ids');
+
+            // Convert string to array
+            $idsArray = explode(',', preg_replace('/[\[\] ]/', '', subject: $ids));
+
+            $existingIds =User::whereIn('id', $idsArray)->pluck('id')->toArray();
+
+            // Check if query IDs exist in the database
+            $missingIds = array_diff($idsArray, $existingIds);
+
+            // If there are any missing IDs
+            if (!empty($missingIds)) {
+                return response()->json([
+                    "message" => "The following employee IDs do not exist: " . implode(", ", $missingIds)
+                ], 404);
+            }
+
+            User::whereIn('id', $idsArray)->delete();
+
+            DB::commit();
+            return response()->json([
+                    "message" => "Employee records deleted successfully"
+                ],200);
+        } catch (Exception $e) {
+            DB::rollBack();
+            Log::error('Error deleting employees: ' . $e->getMessage());
+
+            return response()->json([
+                "message" => "Employees not found or unable to delete."
             ], 404);
         }
     }

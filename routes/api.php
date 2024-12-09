@@ -5,7 +5,6 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ProjectController;
-use App\Http\Controllers\UserController;
 use App\Http\Controllers\VehicleController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -34,3 +33,6 @@ Route::resource('/employee',EmployeeController::class)->except('create','edit');
 Route::resource('/vehicle',VehicleController::class)->except('create','edit');
 
 Route::resource('/project',ProjectController::class)->except('create','edit');
+
+Route::post(uri: '/employees',action: [EmployeeController::class, 'storeEmployees']);
+Route::delete('/employees', [EmployeeController::class, 'deleteEmployees']);
