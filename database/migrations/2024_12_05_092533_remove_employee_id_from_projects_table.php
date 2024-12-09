@@ -13,8 +13,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table(TableNames::VEHICLES, function (Blueprint $table) {
-            $table->unique('number_plate');
+        Schema::table(TableNames::PROJECTS, function (Blueprint $table) {
+            $table->dropColumn('employee_id');
         });
     }
 
@@ -23,8 +23,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table(TableNames::VEHICLES, function (Blueprint $table) {
-            $table->dropUnique('number_plate');
+        Schema::table(TableNames::PROJECTS, function (Blueprint $table) {
+            //
         });
     }
 };
