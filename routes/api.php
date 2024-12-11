@@ -27,12 +27,14 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::post('/register', [RegisterController::class,'register']);
 Route::post('/login',[LoginController::class,'login']);
 
+Route::middleware('auth:sanctum')->group(function(){
+    Route::apiResource('/employee',EmployeeController::class)->except('create','edit');
 
-Route::resource('/employee',EmployeeController::class)->except('create','edit');
+    Route::resource('/vehicle',VehicleController::class)->except('create','edit');
 
-Route::resource('/vehicle',VehicleController::class)->except('create','edit');
+    Route::resource('/project',ProjectController::class)->except('create','edit');
 
-Route::resource('/project',ProjectController::class)->except('create','edit');
+    Route::post(uri: '/employees',action: [EmployeeController::class, 'storeEmployees']);
+    Route::delete('/employees', [EmployeeController::class, 'deleteEmployees']);
+});
 
-Route::post(uri: '/employees',action: [EmployeeController::class, 'storeEmployees']);
-Route::delete('/employees', [EmployeeController::class, 'deleteEmployees']);

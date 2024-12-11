@@ -13,7 +13,9 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use App\Enums\Gender;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rules\Exists;
 
 class EmployeeController extends Controller
@@ -59,7 +61,7 @@ class EmployeeController extends Controller
             Log::error('Error fetching employees: ' . $e->getMessage());
 
             return response()->json([
-                "message" => "An error occurred while retrieving employee data."
+                "message" =>$e->getMessage()
             ], 500);
         }
     }
@@ -107,12 +109,12 @@ class EmployeeController extends Controller
             Log::error('Error creating employees: ' . $e->getMessage());
 
             return response()->json([
-                "message" => "Failed to create employee records."
+                "message" => $e->getMessage()
             ], 500);
         }
     }
 
- function generateEmailAddress(string $firstName, string $lastName)
+    function generateEmailAddress(string $firstName, string $lastName)
     {
         $randomNumber = rand(1, 100);
 
@@ -155,19 +157,23 @@ class EmployeeController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(int $id)
     {
         try {
             $employee = User::findOrFail($id);
-
-            return $employee;
+            if (Gate::allows('fetchEmployee', $employee)) {
+                return $employee;
+            }else{
+                return response()->json([
+                    "message" => "Unauthorized access"
+                ], 403);
+            }
         } catch (Exception $e) {
             Log::error('Error fetching employee: ' . $e->getMessage());
 
             return response()->json([
-                "message" => "Employee not found."
-            ], 404);
-
+                "message" => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -187,17 +193,24 @@ class EmployeeController extends Controller
         try {
             $employee = User::findOrFail($id);
 
-            $updatable = $this->getUpdatables($request->toArray());
-            $employee->update($updatable);
+            if (Gate::allows('updateEmployee', $employee)) {
+                $updatable = $this->getUpdatables($request->toArray());
+                $employee->update($updatable);
 
-            return response()->json([
-                "message" => "Employee record updated successfully."
-            ], 200);
+                return response()->json([
+                    "message" => "Employee record updated successfully."
+                ], 200);
+            }else{
+                return response()->json([
+                    "message" => "Unauthorized access"
+                ], 403);
+            }
+
         } catch (Exception $e) {
             Log::error('Error updating employee: ' . $e->getMessage());
 
             return response()->json([
-                "message" => "Failed to update employee record."
+                "message" => $e->getMessage()
             ], 500);
         }
     }
@@ -230,17 +243,22 @@ class EmployeeController extends Controller
     {
         try {
             $employee = User::findOrFail($id);
+            if (Gate::allows('deleteEmployee', $employee)) {
+                $employee->delete();
 
-            $employee->delete();
-
-            return response()->json([
-                "message" => "Employee record deleted successfully"
-            ],200);
+                return response()->json([
+                    "message" => "Employee record deleted successfully"
+                ],200);
+            }else{
+                return response()->json([
+                    "message" => "Unauthorized access"
+                ], 403);
+            }
         } catch (Exception $e) {
             Log::error('Error deleting employee: ' . $e->getMessage());
 
             return response()->json([
-                "message" => "Employee not found or unable to delete."
+                "message" => $e->getMessage()
             ], 404);
         }
     }
@@ -260,7 +278,7 @@ class EmployeeController extends Controller
             Log::error('Error creating employees: ' . $e->getMessage());
 
             return response()->json([
-                "message" => "Failed to create employees records."
+                "message" => $e->getMessage()
             ], 500);
         }
     }
@@ -285,18 +303,24 @@ class EmployeeController extends Controller
                 ], 404);
             }
 
-            User::whereIn('id', $idsArray)->delete();
+            if (Gate::allows('bulkDeleteEmployee', $ids)) {
+                User::whereIn('id', $idsArray)->delete();
 
-            DB::commit();
-            return response()->json([
-                    "message" => "Employee records deleted successfully"
-                ],200);
+                DB::commit();
+                return response()->json([
+                        "message" => "Employee records deleted successfully"
+                    ],200);
+            }else{
+                return response()->json([
+                    "message" => "Unauthorized access"
+                ], 403);
+            }
         } catch (Exception $e) {
             DB::rollBack();
             Log::error('Error deleting employees: ' . $e->getMessage());
 
             return response()->json([
-                "message" => "Employees not found or unable to delete."
+                "message" => $e->getMessage()
             ], 404);
         }
     }
