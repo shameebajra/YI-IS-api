@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
@@ -6,17 +7,17 @@ use Illuminate\Http\Request;
 
 class CustomResponseController extends Controller
 {
-    public function customSuccessResponse($status, $message, $data){
+    public function customSuccessResponse(int $status,string $message, mixed $data){
         return response()->json([
-            "success" => "true",
+            "success" => true,
             "message" => $message,
             "data" =>$data,
         ], $status);
     }
 
-    public function customFailureResponse($status, $message, $data){
+    public function customFailureResponse(int $status,string $message,mixed $data){
         return response()->json([
-            "success" => "false",
+            "success" => false,
             "message" => $message,
             "error" =>$data,
         ], $status);

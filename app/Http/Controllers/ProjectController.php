@@ -23,11 +23,11 @@ class ProjectController extends Controller
         try{
             $projects = Project::all();
 
-            return $this->customSuccessResponse(200,"Projects fetched successful." , $projects );
+            return $this->customSuccessResponse(200,"Projects fetched successful." , ["projects"=>$projects] );
         }catch (Exception $e) {
             Log::error('Error fetching projects: ' . $e->getMessage());
 
-            return $this->customFailureResponse(500,"Error fetching projects.", "" );
+            return $this->customFailureResponse(500,"Error fetching projects.", [] );
         }
     }
 
@@ -43,7 +43,7 @@ class ProjectController extends Controller
             $employees = User::whereIn('id', $employeeIds)->get();
 
             if ($employees->isEmpty()) {
-                return $this->customFailureResponse(404,"No employees exist with the provided IDs.", "" );
+                return $this->customFailureResponse(404,"No employees exist with the provided IDs.", [] );
             }
 
             $project = Project::create([
@@ -56,13 +56,13 @@ class ProjectController extends Controller
 
             DB::commit();
 
-            return $this->customSuccessResponse(201,"Project created and employees assigned successfully." , $project);
+            return $this->customSuccessResponse(201,"Project created and employees assigned successfully." , ["project"=>$project]);
         } catch (Exception $e) {
             DB::rollBack();
 
             Log::error('Error updating employee: ' . $e->getMessage());
 
-            return $this->customFailureResponse(500,"Failed to create project.", "" );
+            return $this->customFailureResponse(500,"Failed to create project.", [] );
         }
     }
 
@@ -72,11 +72,11 @@ class ProjectController extends Controller
     public function show(Project $project)
     {
         try{
-            return $this->customSuccessResponse(200,"Project fetched successully." , $project);
+            return $this->customSuccessResponse(200,"Project fetched successully." , ["project"=>$project]);
         }catch (Exception $e) {
             Log::error('Error fetching projects: ' . $e->getMessage());
 
-            return $this->customFailureResponse(500,"Failed to fetch project record.", "" );
+            return $this->customFailureResponse(500,"Failed to fetch project record.", [] );
         }
     }
 
@@ -92,7 +92,7 @@ class ProjectController extends Controller
             $employees = User::whereIn('id', $employeeIds)->get();
 
             if ($employees->isEmpty()) {
-                return $this->customFailureResponse(500,"Error fetching projects.", "" );
+                return $this->customFailureResponse(500,"Error fetching projects.", [ ] );
             }
 
             $project = Project::findOrFail($id);
@@ -104,13 +104,13 @@ class ProjectController extends Controller
 
             DB::commit();
 
-            return $this->customSuccessResponse(200,"Project and employees updated successfully." , $project);
+            return $this->customSuccessResponse(200,"Project and employees updated successfully." , ["project"=>$project]);
         }catch (Exception $e) {
             DB::rollBack();
 
             Log::error('Error updating projects: ' . $e->getMessage());
 
-            return $this->customFailureResponse(500,"Project not found or error updating.", "" );
+            return $this->customFailureResponse(500,"Project not found or error updating.", [] );
         }
     }
 
@@ -122,11 +122,11 @@ class ProjectController extends Controller
           try{
             $project->user()->detach();
 
-            return $this->customSuccessResponse(200,"Project deleted successfully." , $project);
+            return $this->customSuccessResponse(200,"Project deleted successfully." , []);
         } catch (Exception $e) {
             Log::error('Error deleting project: ' . $e->getMessage());
 
-            return $this->customFailureResponse(500,"Project not found or unable to delete.", "" );
+            return $this->customFailureResponse(500,"Project not found or unable to delete.", [] );
         }
     }
 

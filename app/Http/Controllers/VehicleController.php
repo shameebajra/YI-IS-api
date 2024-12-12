@@ -22,9 +22,9 @@ class VehicleController extends Controller
             $vehicles = Vehicle::all();
 
             if($vehicles->isEmpty()){
-                return $this->customFailureResponse(404,"No vehicle found.", "" );
+                return $this->customFailureResponse(404,"No vehicle found.", ["vehicles"=>[]] );
             }
-            return $this->customSuccessResponse(200,"Vehicles fetched successfully." , $vehicles );
+            return $this->customSuccessResponse(200,"Vehicles fetched successfully." , ["vehicles"=>$vehicles] );
         }catch(Exception $e){
             Log::error('Error fetching vehicles: ' . $e->getMessage());
 
@@ -44,7 +44,7 @@ class VehicleController extends Controller
             $employee = User::find($id);
 
             if(!$employee){
-                return $this->customFailureResponse(404,"No employee found.", "" );
+                return $this->customFailureResponse(404,"No employee found.", ["employees"=>[]] );
             }
 
             $vehicle = new Vehicle();
@@ -55,7 +55,7 @@ class VehicleController extends Controller
 
             $vehicle->save();
 
-            return $this->customSuccessResponse(201,"Vehicle created successfully." , $vehicle );
+            return $this->customSuccessResponse(201,"Vehicle created successfully." , ["vehicle"=>$vehicle]);
         }catch(Exception $e){
             Log::error('Error creating vehicle: ' . $e->getMessage());
 
@@ -69,7 +69,7 @@ class VehicleController extends Controller
     public function show(Vehicle $vehicle)
     {
         try{
-            return $this->customSuccessResponse(200,"Vehicle fetched successfully." , $vehicle );
+            return $this->customSuccessResponse(200,"Vehicle fetched successfully." , ["vehicle"=>$vehicle] );
         }catch(Exception $e){
             Log::error('Error fetching vehicles: ' . $e->getMessage());
 
@@ -86,7 +86,7 @@ class VehicleController extends Controller
             $updatable = $this->getUpdatables($request->toArray());
             $vehicle->update($updatable);
 
-            return $this->customSuccessResponse(200,"Vehicle updated successfully." , $vehicle );
+            return $this->customSuccessResponse(200,"Vehicle updated successfully." , ["vehicle"=>$vehicle]);
         }catch(Exception $e){
             Log::error('Error updating vehicles: ' . $e->getMessage());
 

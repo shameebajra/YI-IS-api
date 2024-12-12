@@ -34,14 +34,14 @@ class EmployeeController extends CustomResponseController
             $employees = User::paginate($limit, ['*'], 'page', $page);
 
             if ($employees->isEmpty()) {
-                return $this->customFailureResponse(404,"No employee found." , $employees );
+                return $this->customFailureResponse(404,"No employee found." , ['employees'=>[]] );
             }
 
-            return $this->customSuccessResponse(200,"Employees fetched successful." , $employees );
+            return $this->customSuccessResponse(200,"Employees fetched successful." , ['employees'=>$employees] );
         } catch (Exception $e) {
             Log::error('Error fetching employees: ' . $e->getMessage());
 
-            return $this->customFailureResponse(500,"Error fetching employees.", "" );
+            return $this->customFailureResponse(500,"Error fetching employees.", [] );
         }
     }
 
@@ -54,11 +54,11 @@ class EmployeeController extends CustomResponseController
             //read csv file from service
             $this->csvService->createUserArr();
 
-            return $this->customSuccessResponse(201,"Employee created successfully." , "" );
+            return $this->customSuccessResponse(201,"Employee created successfully." , [] );
         } catch (Exception $e) {
             Log::error('Error creating employees: ' . $e->getMessage());
 
-            return $this->customFailureResponse(500,"Error creating employees.", "" );
+            return $this->customFailureResponse(500,"Error creating employees.", [] );
         }
     }
 
@@ -69,14 +69,14 @@ class EmployeeController extends CustomResponseController
     {
         try {
             if (Gate::allows('fetchEmployee', $employee)) {
-                return $this->customSuccessResponse(200,"Employee fetched successfully." , $employee );
+                return $this->customSuccessResponse(200,"Employee fetched successfully." , ['employees'=>$employee] );
             }else{
-                return $this->customFailureResponse(403,"Unauthorized access.", "" );
+                return $this->customFailureResponse(403,"Unauthorized access.", [] );
             }
         } catch (Exception $e) {
             Log::error('Error fetching employee: ' . $e->getMessage());
 
-            return $this->customFailureResponse(500,"Error fetching employee.", "" );
+            return $this->customFailureResponse(500,"Error fetching employee.", [] );
         }
     }
 
@@ -92,15 +92,15 @@ class EmployeeController extends CustomResponseController
                 $updatable = $this->getUpdatables($request->toArray());
                 $employee->update($updatable);
 
-                return $this->customSuccessResponse(200,"Employee updated successfully." , $employee );
+                return $this->customSuccessResponse(200,"Employee updated successfully." , ['employees'=>$employee] );
             }else{
-                return $this->customFailureResponse(403,"Unauthorized access.", "" );
+                return $this->customFailureResponse(403,"Unauthorized access.", [] );
 
             }
         } catch (Exception $e) {
             Log::error('Error updating employee: ' . $e->getMessage());
 
-            return $this->customFailureResponse(500,"Error updating employee.", "" );
+            return $this->customFailureResponse(500,"Error updating employee.", [] );
         }
     }
 
@@ -134,14 +134,14 @@ class EmployeeController extends CustomResponseController
             if (Gate::allows('deleteEmployee', $employee)) {
                 $employee->delete();
 
-                return $this->customSuccessResponse(200,"Employee deleted successfully." , "" );
+                return $this->customSuccessResponse(200,"Employee deleted successfully." , [] );
             }else{
-                return $this->customFailureResponse(403,"Unauthorized access.", "" );
+                return $this->customFailureResponse(403,"Unauthorized access.", [] );
             }
         } catch (Exception $e) {
             Log::error('Error deleting employee: ' . $e->getMessage());
 
-            return $this->customFailureResponse(500,"Error deleting employee.", "" );
+            return $this->customFailureResponse(500,"Error deleting employee.", [] );
         }
     }
 
@@ -152,11 +152,11 @@ class EmployeeController extends CustomResponseController
 
             User::insert($employees);
 
-            return $this->customSuccessResponse(201,"Employee created successfully." , $employees );
+            return $this->customSuccessResponse(201,"Employee created successfully." , ['employees'=>$employees] );
         } catch (Exception $e) {
             Log::error('Error creating employees: ' . $e->getMessage());
 
-            return $this->customFailureResponse(500,"Error creating employees.", "" );
+            return $this->customFailureResponse(500,"Error creating employees.", [] );
         }
     }
 
@@ -175,7 +175,7 @@ class EmployeeController extends CustomResponseController
 
             // If there are any missing IDs
             if (!empty($missingIds)) {
-                return $this->customFailureResponse(404,"The following employee IDs do not exist: " . implode(", ", $missingIds), "" );
+                return $this->customFailureResponse(404,"The following employee IDs do not exist: " . implode(", ", $missingIds), ["employees"=>[]] );
             }
 
             if (Gate::allows('bulkDeleteEmployee', [$idsArray])) {
@@ -186,13 +186,13 @@ class EmployeeController extends CustomResponseController
                         "message" => "Employee records deleted successfully"
                     ],200);
             }else{
-                 return $this->customFailureResponse(403,"Unauthorized access.", "" );
+                 return $this->customFailureResponse(403,"Unauthorized access.", [] );
             }
         } catch (Exception $e) {
             DB::rollBack();
             Log::error('Error deleting employees: ' . $e->getMessage());
 
-            return $this->customFailureResponse(500,"Error deleting employees.", "" );
+            return $this->customFailureResponse(500,"Error deleting employees.", [] );
         }
     }
 }
