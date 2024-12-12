@@ -18,6 +18,7 @@ class User extends Authenticatable implements AuthenticatableContract, Authoriza
 {
     use HasApiTokens, HasFactory, Notifiable, Authorizable;
 
+
     protected $table = TableNames::EMPLOYEES;
     /**
      * The attributes that are mass assignable.
@@ -56,16 +57,14 @@ class User extends Authenticatable implements AuthenticatableContract, Authoriza
         'email_verified_at' => 'datetime',
     ];
 
-    protected $policies = [
-        User::class=> EmployeePolicy::class,
-    ];
+    protected $with =['vehicles'];
 
     public function role(){
-        return $this->hasOne(Role::class);
+        return $this->belongsTo(Role::class);
     }
 
     public function vehicles(){
-        return $this->hasMany(Vehicle::class);
+        return $this->hasMany(Vehicle::class,'employee_id');
     }
 
     public function project(){

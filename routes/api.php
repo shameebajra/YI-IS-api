@@ -34,7 +34,7 @@ Route::middleware('auth:sanctum')->group(function(){
 
     Route::apiResource('/projects',ProjectController::class)->except('create','edit');
 
-    Route::post(uri: '/employees/bulk-store',action: [EmployeeController::class, 'storeEmployees']);
-    Route::delete('/employees/bulk-delete', [EmployeeController::class, 'deleteEmployees']);
+    Route::post(uri: '/employees/bulk/store',action: [EmployeeController::class, 'storeEmployees']);
+    Route::delete('/employees/bulk/delete', [EmployeeController::class, 'deleteEmployees']);
 });
 

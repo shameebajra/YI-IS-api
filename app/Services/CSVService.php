@@ -52,9 +52,21 @@ class CSVService
         $data = $this->readCsv();
         $rows = explode("\n", $data);
 
-        $users = collect($rows)->map(function ($row) {
-            return $this->mapUserData($row);
-        });
+        $users = [];
+
+//        foreach ($rows as $row) {
+//            $users[] = $this->mapUserData($row);
+//        }
+//        ----
+
+//        $users =  array_map(function ($row) {
+//            return $this->mapUserData($row);
+//        }, $rows);
+//        ---
+
+       $users = collect($rows)->map(function ($row) {
+           return $this->mapUserData($row);
+       });
 
         User::insert($users->toArray());
     }
@@ -73,4 +85,8 @@ class CSVService
         ];
     }
 
+
+    function doThis($array){
+        foreach($array as $row){}
+    }
 }
