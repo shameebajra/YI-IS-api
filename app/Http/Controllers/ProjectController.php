@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Project;
 use App\Models\User;
+use App\Traits\CustomResponseTrait;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -13,6 +14,7 @@ use Illuminate\Support\Facades\Log;
 
 class ProjectController extends Controller
 {
+    use CustomResponseTrait;
     /**
      * Display a listing of the resource.
      */
@@ -21,22 +23,12 @@ class ProjectController extends Controller
         try{
             $projects = Project::all();
 
-            return $projects;
+            return $this->customSuccessResponse(200,"Projects fetched successful." , ["projects"=>$projects] );
         }catch (Exception $e) {
             Log::error('Error fetching projects: ' . $e->getMessage());
 
-            return response()->json([
-                "message" => "Failed to fetch project record."
-            ], 500);
+            return $this->customFailureResponse(500,"Error fetching projects.", [] );
         }
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-       //
     }
 
     /**
@@ -48,19 +40,10 @@ class ProjectController extends Controller
         try {
             $employeeIds= $request->employee_id;
 
-            // Validate employee IDs
-            if (!is_array($employeeIds) || empty($employeeIds)) {
-                return response()->json([
-                    "message" => "Employee IDs must be a non-empty array."
-                ], 400);
-            }
-
             $employees = User::whereIn('id', $employeeIds)->get();
 
             if ($employees->isEmpty()) {
-                return response()->json([
-                    "message" => "No employees exist with the provided IDs."
-                ], 404);
+                return $this->customFailureResponse(404,"No employees exist with the provided IDs.", [] );
             }
 
             $project = Project::create([
@@ -73,45 +56,28 @@ class ProjectController extends Controller
 
             DB::commit();
 
-            return response()->json([
-                "message" => "Project created and employees assigned successfully.",
-                "project" => $project,
-            ], 201);
+            return $this->customSuccessResponse(201,"Project created and employees assigned successfully." , ["project"=>$project]);
         } catch (Exception $e) {
             DB::rollBack();
 
             Log::error('Error updating employee: ' . $e->getMessage());
 
-            return response()->json([
-                "message" => "Failed to update employee record."
-            ], 500);
+            return $this->customFailureResponse(500,"Failed to create project.", [] );
         }
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Project $project)
     {
         try{
-            $projects = Project::findOrFail($id);
-
-            return $projects;
+            return $this->customSuccessResponse(200,"Project fetched successully." , ["project"=>$project]);
         }catch (Exception $e) {
             Log::error('Error fetching projects: ' . $e->getMessage());
 
-            return response()->json([
-                "message" => "Failed to fetch project record."
-            ], 500);
+            return $this->customFailureResponse(500,"Failed to fetch project record.", [] );
         }
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Project $project)
-    {
-        //
     }
 
     /**
@@ -126,9 +92,7 @@ class ProjectController extends Controller
             $employees = User::whereIn('id', $employeeIds)->get();
 
             if ($employees->isEmpty()) {
-                return response()->json([
-                    "message" => "No employees exist with the provided IDs."
-                ], 404);
+                return $this->customFailureResponse(500,"Error fetching projects.", [ ] );
             }
 
             $project = Project::findOrFail($id);
@@ -140,41 +104,29 @@ class ProjectController extends Controller
 
             DB::commit();
 
-
-            return response()->json([
-                "message" => "Employee record updated successfully."
-            ], 200);
+            return $this->customSuccessResponse(200,"Project and employees updated successfully." , ["project"=>$project]);
         }catch (Exception $e) {
             DB::rollBack();
 
             Log::error('Error updating projects: ' . $e->getMessage());
 
-            return response()->json([
-                "message" => "Project not found or error updating."
-            ], 500);
+            return $this->customFailureResponse(500,"Project not found or error updating.", [] );
         }
-
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Project $project)
     {
           try{
-            $project = Project::findOrFail($id);
-
             $project->user()->detach();
 
-            return response()->json([
-                "message" => "Project deleted successfully"
-            ],200);
+            return $this->customSuccessResponse(200,"Project deleted successfully." , []);
         } catch (Exception $e) {
             Log::error('Error deleting project: ' . $e->getMessage());
 
-            return response()->json([
-                "message" => "Project not found or unable to delete."
-            ], 404);
+            return $this->customFailureResponse(500,"Project not found or unable to delete.", [] );
         }
     }
 

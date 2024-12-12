@@ -5,14 +5,19 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
 use App\Enums\TableNames;
+use App\Policies\EmployeePolicy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
+use Illuminate\Contracts\Auth\Access\Authorizable as AuthorizableContract;
+use Illuminate\Foundation\Auth\Access\Authorizable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable
+class User extends Authenticatable implements AuthenticatableContract, AuthorizableContract
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, Authorizable;
+
 
     protected $table = TableNames::EMPLOYEES;
     /**
@@ -29,7 +34,6 @@ class User extends Authenticatable
         'role_id',
         'updated_at',
         'created_at',
-
     ];
 
     /**
@@ -53,12 +57,14 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
+    protected $with =['vehicles'];
+
     public function role(){
         return $this->belongsTo(Role::class);
     }
 
     public function vehicles(){
-        return $this->hasMany(Vehicle::class);
+        return $this->hasMany(Vehicle::class,'employee_id');
     }
 
     public function project(){

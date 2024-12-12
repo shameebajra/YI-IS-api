@@ -5,36 +5,21 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\EmployeeRequest;
 use App\Models\User;
-use App\Models\Role;
 use Exception;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
-use App\Enums\Gender;
+use App\Services\CSVService;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rules\Exists;
+use Illuminate\Support\Facades\Gate;
 
-class EmployeeController extends Controller
+class EmployeeController extends CustomResponseController
 {
-       /**
-     * Read csv file from storage
-     */
-    public function readCsv()
+    protected $csvService;
+
+    public function __construct()
     {
-        try {
-            $csvContents = Storage::disk('data')->get('users.csv');
-
-            return $csvContents;
-        } catch (Exception $e) {
-            Log::error('Error reading file: ' . $e->getMessage());
-
-            return response()->json([
-                "message" => "CSV file not found or unable to read."
-            ], 404);
-
-        }
+        $this->csvService = new CSVService('users.csv');
     }
 
     /**
@@ -43,33 +28,21 @@ class EmployeeController extends Controller
     public function index(Request $request)
     {
         try {
-            $limit = $request->query('limit', 25);
-            $page = $request->query('page', 1);
+            $limit = $request->query('limit', "25");
+            $page = $request->query('page', default: "1");
 
             $employees = User::paginate($limit, ['*'], 'page', $page);
 
             if ($employees->isEmpty()) {
-                return response()->json([
-                    "message" => "No employees found."
-                ], 404);
+                return $this->customFailureResponse(404,"No employee found." , ['employees'=>[]] );
             }
 
-            return response()->json($employees);
+            return $this->customSuccessResponse(200,"Employees fetched successful." , ['employees'=>$employees] );
         } catch (Exception $e) {
             Log::error('Error fetching employees: ' . $e->getMessage());
 
-            return response()->json([
-                "message" => "An error occurred while retrieving employee data."
-            ], 500);
+            return $this->customFailureResponse(500,"Error fetching employees.", [] );
         }
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
     }
 
     /**
@@ -78,127 +51,56 @@ class EmployeeController extends Controller
     public function store(Request $request)
     {
         try {
-            //read csv file
-            $fileContents = $this->readCsv();
+            //read csv file from service
+            $this->csvService->createUserArr();
 
-            //convert to array
-            $rows = explode("\n", $fileContents);
-
-            foreach ($rows as $row) {
-                //convert to array
-                $rowVals = explode(',', $row);
-
-                if (isset($rowVals[0], $rowVals[2])) {
-                    $email = $this->generateEmailAddress($rowVals[0], $rowVals[2]);
-                    $name = $this->generateName($rowVals[0], $rowVals[2]);
-                    $roleId = $this->getMappedRole($rowVals[2])->id;
-                    $password = $this->generatePassword($rowVals[0]);
-                    $randomGender = rand(0, 2);
-
-                    $this->makeEmployee($email, $name, $password, $roleId, $randomGender);
-                }
-            }
-
-            return response()->json([
-                "message" => "Employee created successfully."
-            ], 201);
-
+            return $this->customSuccessResponse(201,"Employee created successfully." , [] );
         } catch (Exception $e) {
             Log::error('Error creating employees: ' . $e->getMessage());
 
-            return response()->json([
-                "message" => "Failed to create employee records."
-            ], 500);
+            return $this->customFailureResponse(500,"Error creating employees.", [] );
         }
-    }
-
- function generateEmailAddress(string $firstName, string $lastName)
-    {
-        $randomNumber = rand(1, 100);
-
-        return $firstName . '.' . $lastName . $randomNumber . '@gmail.com';
-    }
-
-    function generateName(string $firstName, string $lastName)
-    {
-        return $firstName . " " . $lastName;
-    }
-
-    function getMappedRole()
-    {
-        return Role::inRandomOrder()->first();
-    }
-
-    function generatePassword(string $firstname)
-    {
-        $dummyPassword = $firstname . "123";
-
-        return bcrypt($dummyPassword);
-    }
-
-    function makeEmployee(string $email, string $name, string $password, int $roleId, int $randomGender)
-    {
-        $employee = new User();
-
-        $employee->name = $name;
-        $employee->email = $email;
-        $employee->password = $password;
-        $employee->gender = Gender::ALL[$randomGender];
-        $employee->join_date = Carbon::now();
-        $employee->role_id = $roleId;
-        $employee->created_at = Carbon::now();
-        $employee->updated_at = Carbon::now();
-
-        $employee->save();
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(User $employee)
     {
         try {
-            $employee = User::findOrFail($id);
-
-            return $employee;
+            if (Gate::allows('fetchEmployee', $employee)) {
+                return $this->customSuccessResponse(200,"Employee fetched successfully." , ['employees'=>$employee] );
+            }else{
+                return $this->customFailureResponse(403,"Unauthorized access.", [] );
+            }
         } catch (Exception $e) {
             Log::error('Error fetching employee: ' . $e->getMessage());
 
-            return response()->json([
-                "message" => "Employee not found."
-            ], 404);
-
+            return $this->customFailureResponse(500,"Error fetching employee.", [] );
         }
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(EmployeeRequest $request, string $id)
+    public function update(EmployeeRequest $request, User $employee)
     {
         try {
-            $employee = User::findOrFail($id);
+            // $employee = User::findOrFail($id);
 
-            $updatable = $this->getUpdatables($request->toArray());
-            $employee->update($updatable);
+            if (Gate::allows('updateEmployee', $employee)) {
+                $updatable = $this->getUpdatables($request->toArray());
+                $employee->update($updatable);
 
-            return response()->json([
-                "message" => "Employee record updated successfully."
-            ], 200);
+                return $this->customSuccessResponse(200,"Employee updated successfully." , ['employees'=>$employee] );
+            }else{
+                return $this->customFailureResponse(403,"Unauthorized access.", [] );
+
+            }
         } catch (Exception $e) {
             Log::error('Error updating employee: ' . $e->getMessage());
 
-            return response()->json([
-                "message" => "Failed to update employee record."
-            ], 500);
+            return $this->customFailureResponse(500,"Error updating employee.", [] );
         }
     }
 
@@ -226,22 +128,20 @@ class EmployeeController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(User $employee)
     {
         try {
-            $employee = User::findOrFail($id);
+            if (Gate::allows('deleteEmployee', $employee)) {
+                $employee->delete();
 
-            $employee->delete();
-
-            return response()->json([
-                "message" => "Employee record deleted successfully"
-            ],200);
+                return $this->customSuccessResponse(200,"Employee deleted successfully." , [] );
+            }else{
+                return $this->customFailureResponse(403,"Unauthorized access.", [] );
+            }
         } catch (Exception $e) {
             Log::error('Error deleting employee: ' . $e->getMessage());
 
-            return response()->json([
-                "message" => "Employee not found or unable to delete."
-            ], 404);
+            return $this->customFailureResponse(500,"Error deleting employee.", [] );
         }
     }
 
@@ -252,16 +152,11 @@ class EmployeeController extends Controller
 
             User::insert($employees);
 
-            return response()->json([
-                "message" => "Employees created successfully."
-            ], 201);
-
+            return $this->customSuccessResponse(201,"Employee created successfully." , ['employees'=>$employees] );
         } catch (Exception $e) {
             Log::error('Error creating employees: ' . $e->getMessage());
 
-            return response()->json([
-                "message" => "Failed to create employees records."
-            ], 500);
+            return $this->customFailureResponse(500,"Error creating employees.", [] );
         }
     }
 
@@ -280,24 +175,24 @@ class EmployeeController extends Controller
 
             // If there are any missing IDs
             if (!empty($missingIds)) {
-                return response()->json([
-                    "message" => "The following employee IDs do not exist: " . implode(", ", $missingIds)
-                ], 404);
+                return $this->customFailureResponse(404,"The following employee IDs do not exist: " . implode(", ", $missingIds), ["employees"=>[]] );
             }
 
-            User::whereIn('id', $idsArray)->delete();
+            if (Gate::allows('bulkDeleteEmployee', [$idsArray])) {
+                User::whereIn('id', $idsArray)->delete();
 
-            DB::commit();
-            return response()->json([
-                    "message" => "Employee records deleted successfully"
-                ],200);
+                DB::commit();
+                return response()->json([
+                        "message" => "Employee records deleted successfully"
+                    ],200);
+            }else{
+                 return $this->customFailureResponse(403,"Unauthorized access.", [] );
+            }
         } catch (Exception $e) {
             DB::rollBack();
             Log::error('Error deleting employees: ' . $e->getMessage());
 
-            return response()->json([
-                "message" => "Employees not found or unable to delete."
-            ], 404);
+            return $this->customFailureResponse(500,"Error deleting employees.", [] );
         }
     }
 }

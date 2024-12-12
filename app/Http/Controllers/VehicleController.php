@@ -5,12 +5,14 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Traits\CustomResponseTrait;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class VehicleController extends Controller
 {
+    use CustomResponseTrait;
     /**
      * Display a listing of the resource.
      */
@@ -20,28 +22,16 @@ class VehicleController extends Controller
             $vehicles = Vehicle::all();
 
             if($vehicles->isEmpty()){
-                return response()->json([
-                    "message" => "No vehicles found."
-                ], 404);
+                return $this->customFailureResponse(404,"No vehicle found.", ["vehicles"=>[]] );
             }
-
-            return $vehicles;
+            return $this->customSuccessResponse(200,"Vehicles fetched successfully." , ["vehicles"=>$vehicles] );
         }catch(Exception $e){
             Log::error('Error fetching vehicles: ' . $e->getMessage());
 
-            return response()->json([
-                "message" => "An error occurred while retrieving vehicle data."
-            ], 500);
+            return $this->customFailureResponse(500,"An error occurred while retrieving vehicles data.", "" );
         }
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-
-    }
 
     /**
      * Store a newly created resource in storage.
@@ -54,9 +44,7 @@ class VehicleController extends Controller
             $employee = User::find($id);
 
             if(!$employee){
-                return response()->json([
-                    "message" => "Employee id does not exist."
-                ], 404);
+                return $this->customFailureResponse(404,"No employee found.", ["employees"=>[]] );
             }
 
             $vehicle = new Vehicle();
@@ -67,84 +55,58 @@ class VehicleController extends Controller
 
             $vehicle->save();
 
-           return response()->json([
-                "message" => "Vehicle created successfully."
-            ], 201);
+            return $this->customSuccessResponse(201,"Vehicle created successfully." , ["vehicle"=>$vehicle]);
         }catch(Exception $e){
             Log::error('Error creating vehicle: ' . $e->getMessage());
 
-            return response()->json([
-                "message" => "Failed to create vehicle records."
-            ], 500);
+            return $this->customFailureResponse(500,"Failed to create vehicle record.", "" );
         }
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Vehicle $vehicle)
     {
         try{
-            $vehicle = Vehicle::findOrFail($id);
-
-            return response()->json($vehicle, 200);
+            return $this->customSuccessResponse(200,"Vehicle fetched successfully." , ["vehicle"=>$vehicle] );
         }catch(Exception $e){
             Log::error('Error fetching vehicles: ' . $e->getMessage());
 
-            return response()->json([
-                "message" => "Vehicle not found."
-            ], 500);
+            return $this->customFailureResponse(500,"An error occurred while retrieving vehicle data.", "" );
         }
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Vehicle $vehicle)
     {
         try{
-            $vehicle = Vehicle::findOrFail($id);
-
             $updatable = $this->getUpdatables($request->toArray());
             $vehicle->update($updatable);
 
-            return response()->json($vehicle, 200);
+            return $this->customSuccessResponse(200,"Vehicle updated successfully." , ["vehicle"=>$vehicle]);
         }catch(Exception $e){
             Log::error('Error updating vehicles: ' . $e->getMessage());
 
-            return response()->json([
-                "message" => "An error occurred while updating vehicle data."
-            ], 500);
+            return $this->customFailureResponse(500,"An error occurred while updating vehicle data.", "" );
         }
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Vehicle $vehicle)
     {
         try{
-            $vehicle = Vehicle::findOrFail($id);
-
             $vehicle->delete();
 
-            return response()->json([
-                "message" => "Vehicle deleted successfully."
-            ], 200);
+            return $this->customSuccessResponse(200,"Vehicle deleted successfully." , "" );
         }catch(Exception $e){
             Log::error('Error deleting vehicles: ' . $e->getMessage());
 
-            return response()->json([
-                "message" => "An error occurred while deleting vehicle data."
-            ], 500);
+            return $this->customFailureResponse(500,"An error occurred while deleting vehicle data.", "" );
         }
     }
 
@@ -159,7 +121,6 @@ class VehicleController extends Controller
         foreach($updatableKeys as $updatableValue){
             if(array_key_exists($updatableValue, $requestValues)){
                 $returnValue[$updatableValue] = $requestValues[$updatableValue];
-
             }
         }
 
