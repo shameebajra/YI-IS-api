@@ -33,7 +33,6 @@ class User extends Authenticatable implements AuthenticatableContract, Authoriza
         'role_id',
         'updated_at',
         'created_at',
-
     ];
 
     /**

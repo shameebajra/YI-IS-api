@@ -28,13 +28,13 @@ Route::post('/register', [RegisterController::class,'register']);
 Route::post('/login',[LoginController::class,'login']);
 
 Route::middleware('auth:sanctum')->group(function(){
-    Route::apiResource('/employee',EmployeeController::class)->except('create','edit');
+    Route::apiResource('/employees',EmployeeController::class)->except('create','edit');
 
-    Route::resource('/vehicle',VehicleController::class)->except('create','edit');
+    Route::apiResource('/vehicles',VehicleController::class)->except('create','edit');
 
-    Route::resource('/project',ProjectController::class)->except('create','edit');
+    Route::apiResource('/projects',ProjectController::class)->except('create','edit');
 
-    Route::post(uri: '/employees',action: [EmployeeController::class, 'storeEmployees']);
-    Route::delete('/employees', [EmployeeController::class, 'deleteEmployees']);
+    Route::post(uri: '/employees/bulk-store',action: [EmployeeController::class, 'storeEmployees']);
+    Route::delete('/employees/bulk-delete', [EmployeeController::class, 'deleteEmployees']);
 });
 

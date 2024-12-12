@@ -5,38 +5,22 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\EmployeeRequest;
 use App\Models\User;
-use App\Models\Role;
 use Exception;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
-use App\Enums\Gender;
+use App\Services\CSVService;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Validation\Rules\Exists;
 
 class EmployeeController extends Controller
 {
-       /**
-     * Read csv file from storage
-     */
-    public function readCsv()
+
+    protected $csvService;
+
+    public function __construct()
     {
-        try {
-            $csvContents = Storage::disk('data')->get('users.csv');
-
-            return $csvContents;
-        } catch (Exception $e) {
-            Log::error('Error reading file: ' . $e->getMessage());
-
-            return response()->json([
-                "message" => "CSV file not found or unable to read."
-            ], 404);
-
-        }
+        $this->csvService = new CSVService('users.csv');
     }
 
     /**
@@ -46,7 +30,7 @@ class EmployeeController extends Controller
     {
         try {
             $limit = $request->query('limit', 25);
-            $page = $request->query('page', 1);
+            $page = $request->query('page', default: 1);
 
             $employees = User::paginate($limit, ['*'], 'page', $page);
 
@@ -61,7 +45,7 @@ class EmployeeController extends Controller
             Log::error('Error fetching employees: ' . $e->getMessage());
 
             return response()->json([
-                "message" =>$e->getMessage()
+                "message" => "Error fetching employees."
             ], 500);
         }
     }
@@ -81,25 +65,7 @@ class EmployeeController extends Controller
     {
         try {
             //read csv file
-            $fileContents = $this->readCsv();
-
-            //convert to array
-            $rows = explode("\n", $fileContents);
-
-            foreach ($rows as $row) {
-                //convert to array
-                $rowVals = explode(',', $row);
-
-                if (isset($rowVals[0], $rowVals[2])) {
-                    $email = $this->generateEmailAddress($rowVals[0], $rowVals[2]);
-                    $name = $this->generateName($rowVals[0], $rowVals[2]);
-                    $roleId = $this->getMappedRole($rowVals[2])->id;
-                    $password = $this->generatePassword($rowVals[0]);
-                    $randomGender = rand(0, 2);
-
-                    $this->makeEmployee($email, $name, $password, $roleId, $randomGender);
-                }
-            }
+            $this->csvService->createUserArr();
 
             return response()->json([
                 "message" => "Employee created successfully."
@@ -112,46 +78,6 @@ class EmployeeController extends Controller
                 "message" => $e->getMessage()
             ], 500);
         }
-    }
-
-    function generateEmailAddress(string $firstName, string $lastName)
-    {
-        $randomNumber = rand(1, 100);
-
-        return $firstName . '.' . $lastName . $randomNumber . '@gmail.com';
-    }
-
-    function generateName(string $firstName, string $lastName)
-    {
-        return $firstName . " " . $lastName;
-    }
-
-    function getMappedRole()
-    {
-        return Role::inRandomOrder()->first();
-    }
-
-    function generatePassword(string $firstname)
-    {
-        $dummyPassword = $firstname . "123";
-
-        return bcrypt($dummyPassword);
-    }
-
-    function makeEmployee(string $email, string $name, string $password, int $roleId, int $randomGender)
-    {
-        $employee = new User();
-
-        $employee->name = $name;
-        $employee->email = $email;
-        $employee->password = $password;
-        $employee->gender = Gender::ALL[$randomGender];
-        $employee->join_date = Carbon::now();
-        $employee->role_id = $roleId;
-        $employee->created_at = Carbon::now();
-        $employee->updated_at = Carbon::now();
-
-        $employee->save();
     }
 
     /**
@@ -303,7 +229,8 @@ class EmployeeController extends Controller
                 ], 404);
             }
 
-            if (Gate::allows('bulkDeleteEmployee', $ids)) {
+
+            if (Gate::allows('bulkDeleteEmployee', [$idsArray])) {
                 User::whereIn('id', $idsArray)->delete();
 
                 DB::commit();

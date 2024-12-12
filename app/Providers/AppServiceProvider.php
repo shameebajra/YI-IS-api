@@ -36,11 +36,9 @@ class AppServiceProvider extends ServiceProvider
             return $loggedInUser->role->weight >= $requestedUser->role->weight;
         });
 
-        Gate::define('bulkDeleteEmployee', function(User $loggedInUser, $ids) {
-            $requestedUserIds = explode(',', preg_replace('/[\[\] ]/', '', $ids));
-
+        Gate::define('bulkDeleteEmployee', function(User $loggedInUser, array $idsArray) {
             // Fetch the users from the database using the provided IDs
-            $users = User::whereIn('id', $requestedUserIds)->get();
+            $users = User::whereIn('id', $idsArray)->get();
 
             // Loop through the requested users and compare their roles' weight
             foreach ($users as $user) {
