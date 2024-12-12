@@ -61,7 +61,7 @@ class User extends Authenticatable implements AuthenticatableContract, Authoriza
     ];
 
     public function role(){
-        return $this->belongsTo(Role::class);
+        return $this->hasOne(Role::class);
     }
 
     public function vehicles(){
