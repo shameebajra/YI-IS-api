@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\VehicleResource;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Traits\CustomResponseTrait;
@@ -24,7 +25,7 @@ class VehicleController extends Controller
             if($vehicles->isEmpty()){
                 return $this->customFailureResponse(404,"No vehicle found.", ["vehicles"=>[]] );
             }
-            return $this->customSuccessResponse(200,"Vehicles fetched successfully." , ["vehicles"=>$vehicles] );
+            return $this->customSuccessResponse(200,"Vehicles fetched successfully." , ["vehicles"=>VehicleResource::collection($vehicles)] );
         }catch(Exception $e){
             Log::error('Error fetching vehicles: ' . $e->getMessage());
 
@@ -55,7 +56,7 @@ class VehicleController extends Controller
 
             $vehicle->save();
 
-            return $this->customSuccessResponse(201,"Vehicle created successfully." , ["vehicle"=>$vehicle]);
+            return $this->customSuccessResponse(201,"Vehicle created successfully." , ["vehicle"=>new VehicleResource($vehicle)]);
         }catch(Exception $e){
             Log::error('Error creating vehicle: ' . $e->getMessage());
 
@@ -69,7 +70,7 @@ class VehicleController extends Controller
     public function show(Vehicle $vehicle)
     {
         try{
-            return $this->customSuccessResponse(200,"Vehicle fetched successfully." , ["vehicle"=>$vehicle] );
+            return $this->customSuccessResponse(200,"Vehicle fetched successfully." , ["vehicle"=>new VehicleResource($vehicle)] );
         }catch(Exception $e){
             Log::error('Error fetching vehicles: ' . $e->getMessage());
 
@@ -86,7 +87,7 @@ class VehicleController extends Controller
             $updatable = $this->getUpdatables($request->toArray());
             $vehicle->update($updatable);
 
-            return $this->customSuccessResponse(200,"Vehicle updated successfully." , ["vehicle"=>$vehicle]);
+            return $this->customSuccessResponse(200,"Vehicle updated successfully." , ["vehicle"=>new VehicleResource($vehicle)]);
         }catch(Exception $e){
             Log::error('Error updating vehicles: ' . $e->getMessage());
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Http\Requests\EmployeeRequest;
+use App\Http\Resources\EmployeeResource;
 use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
@@ -28,7 +29,7 @@ class EmployeeController extends CustomResponseController
     public function index(Request $request)
     {
         try {
-            $limit = $request->query('limit', "25");
+            $limit = $request->query('limit', "100");
             $page = $request->query('page', default: "1");
 
             $employees = User::paginate($limit, ['*'], 'page', $page);
@@ -37,7 +38,7 @@ class EmployeeController extends CustomResponseController
                 return $this->customFailureResponse(404,"No employee found." , ['employees'=>[]] );
             }
 
-            return $this->customSuccessResponse(200,"Employees fetched successful." , ['employees'=>$employees] );
+            return $this->customSuccessResponse(200,"Employees fetched successful." , ['employees'=>EmployeeResource::collection($employees)] );
         } catch (Exception $e) {
             Log::error('Error fetching employees: ' . $e->getMessage());
 
@@ -67,9 +68,11 @@ class EmployeeController extends CustomResponseController
      */
     public function show(User $employee)
     {
-        try {
+      try {
             if (Gate::allows('fetchEmployee', $employee)) {
-                return $this->customSuccessResponse(200,"Employee fetched successfully." , ['employees'=>$employee] );
+               $employee = $employee->load('vehicles');
+
+                return $this->customSuccessResponse(200,"Employee fetched successfully." , ['employee'=>new EmployeeResource($employee)] );
             }else{
                 return $this->customFailureResponse(403,"Unauthorized access.", [] );
             }
@@ -92,7 +95,7 @@ class EmployeeController extends CustomResponseController
                 $updatable = $this->getUpdatables($request->toArray());
                 $employee->update($updatable);
 
-                return $this->customSuccessResponse(200,"Employee updated successfully." , ['employees'=>$employee] );
+                return $this->customSuccessResponse(200,"Employee updated successfully." , ['employee'=>new EmployeeResource($employee)] );
             }else{
                 return $this->customFailureResponse(403,"Unauthorized access.", [] );
 
@@ -148,11 +151,12 @@ class EmployeeController extends CustomResponseController
     public function storeEmployees(Request $request){
         try{
             $payload = $request->get('data');
+            // $employees = $payload["employees"];
             $employees = Arr::get($payload, 'employees', []);
 
             User::insert($employees);
 
-            return $this->customSuccessResponse(201,"Employee created successfully." , ['employees'=>$employees] );
+            return $this->customSuccessResponse(201,"Employee created successfully." , ['employees'=>EmployeeResource::collection($employees)]);
         } catch (Exception $e) {
             Log::error('Error creating employees: ' . $e->getMessage());
 
@@ -163,7 +167,7 @@ class EmployeeController extends CustomResponseController
     public  function deleteEmployees(Request $request){
         DB::beginTransaction();
         try{
-            $ids = $request->query('ids');
+            $ids = $request->get('ids');
 
             // Convert string to array
             $idsArray = explode(',', preg_replace('/[\[\] ]/', '', subject: $ids));

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\ProjectResource;
 use App\Models\Project;
 use App\Models\User;
 use App\Traits\CustomResponseTrait;
@@ -23,7 +24,7 @@ class ProjectController extends Controller
         try{
             $projects = Project::all();
 
-            return $this->customSuccessResponse(200,"Projects fetched successful." , ["projects"=>$projects] );
+            return $this->customSuccessResponse(200,"Projects fetched successful." , ["projects"=>ProjectResource::collection($projects)] );
         }catch (Exception $e) {
             Log::error('Error fetching projects: ' . $e->getMessage());
 
@@ -56,7 +57,7 @@ class ProjectController extends Controller
 
             DB::commit();
 
-            return $this->customSuccessResponse(201,"Project created and employees assigned successfully." , ["project"=>$project]);
+            return $this->customSuccessResponse(201,"Project created and employees assigned successfully." , ["project"=>new ProjectResource($project)]);
         } catch (Exception $e) {
             DB::rollBack();
 
@@ -72,7 +73,7 @@ class ProjectController extends Controller
     public function show(Project $project)
     {
         try{
-            return $this->customSuccessResponse(200,"Project fetched successully." , ["project"=>$project]);
+            return $this->customSuccessResponse(200,"Project fetched successully." , ["project"=>new ProjectResource($project)]);
         }catch (Exception $e) {
             Log::error('Error fetching projects: ' . $e->getMessage());
 
@@ -104,7 +105,7 @@ class ProjectController extends Controller
 
             DB::commit();
 
-            return $this->customSuccessResponse(200,"Project and employees updated successfully." , ["project"=>$project]);
+            return $this->customSuccessResponse(200,"Project and employees updated successfully." , ["project"=>new ProjectResource($project)]);
         }catch (Exception $e) {
             DB::rollBack();
 
