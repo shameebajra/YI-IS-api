@@ -57,8 +57,6 @@ class User extends Authenticatable implements AuthenticatableContract, Authoriza
         'email_verified_at' => 'datetime',
     ];
 
-    protected $with =['vehicles'];
-
     public function role(){
         return $this->belongsTo(Role::class);
     }
