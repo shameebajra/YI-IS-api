@@ -20,7 +20,7 @@ class VehicleController extends Controller
     public function index()
     {
         try{
-            $vehicles = Vehicle::all();
+            $vehicles = Vehicle::with('user')->get();
 
             if($vehicles->isEmpty()){
                 return $this->customFailureResponse(404,"No vehicle found.", ["vehicles"=>[]] );

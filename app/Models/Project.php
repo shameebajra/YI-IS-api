@@ -12,10 +12,10 @@ class Project extends Model
     protected $fillable=[
         'name',
         'year_of_start',
-         'is_domestic'
+        'is_domestic'
     ];
 
-    public function user(){
+    public function users(){
         return $this->belongsToMany(User::class,'employee_projects','project_id','employee_id','id','id');
     }
 }

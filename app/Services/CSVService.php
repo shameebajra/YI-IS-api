@@ -54,21 +54,11 @@ class CSVService
 
         $users = [];
 
-//        foreach ($rows as $row) {
-//            $users[] = $this->mapUserData($row);
-//        }
-//        ----
+       foreach ($rows as $row) {
+           $users[] = $this->mapUserData($row);
+       }
 
-//        $users =  array_map(function ($row) {
-//            return $this->mapUserData($row);
-//        }, $rows);
-//        ---
-
-       $users = collect($rows)->map(function ($row) {
-           return $this->mapUserData($row);
-       });
-
-        User::insert($users->toArray());
+        User::insert($users);
     }
 
 
@@ -83,10 +73,5 @@ class CSVService
             'gender' => Gender::ALL[array_rand(Gender::ALL)],
             'join_date' => now(),
         ];
-    }
-
-
-    function doThis($array){
-        foreach($array as $row){}
     }
 }

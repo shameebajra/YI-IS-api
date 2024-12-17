@@ -20,19 +20,14 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
-
-Route::post('/register', [RegisterController::class,'register']);
 Route::post('/login',[LoginController::class,'login']);
 
 Route::middleware('auth:sanctum')->group(function(){
-    Route::apiResource('/employees',EmployeeController::class)->except('create','edit');
+    Route::apiResource('/employees',EmployeeController::class);
 
-    Route::apiResource('/vehicles',VehicleController::class)->except('create','edit');
+    Route::apiResource('/vehicles',VehicleController::class);
 
-    Route::apiResource('/projects',ProjectController::class)->except('create','edit');
+    Route::apiResource('/projects',ProjectController::class);
 
     Route::post(uri: '/employees/bulk/store',action: [EmployeeController::class, 'storeEmployees']);
     Route::delete('/employees/bulk/delete', [EmployeeController::class, 'deleteEmployees']);

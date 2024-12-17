@@ -22,7 +22,7 @@ class ProjectController extends Controller
     public function index()
     {
         try{
-            $projects = Project::all();
+            $projects = Project::with('users')->get();
 
             return $this->customSuccessResponse(200,"Projects fetched successful." , ["projects"=>ProjectResource::collection($projects)] );
         }catch (Exception $e) {
@@ -53,7 +53,7 @@ class ProjectController extends Controller
                 'is_domestic' => $request->is_domestic,
             ]);
 
-            $project->user()->attach($employeeIds);
+            $project->users()->attach($employeeIds);
 
             DB::commit();
 
@@ -101,7 +101,7 @@ class ProjectController extends Controller
             $updatable = $this->getUpdatables($request->toArray());
             $project->update($updatable);
 
-            $project->user()->sync($employeeIds);
+            $project->users()->sync($employeeIds);
 
             DB::commit();
 
@@ -121,7 +121,7 @@ class ProjectController extends Controller
     public function destroy(Project $project)
     {
           try{
-            $project->user()->detach();
+            $project->users()->detach();
 
             return $this->customSuccessResponse(200,"Project deleted successfully." , []);
         } catch (Exception $e) {
@@ -139,6 +139,5 @@ class ProjectController extends Controller
         ];
 
         return Arr::only($requestValues, $updatableKeys);
-
     }
 }

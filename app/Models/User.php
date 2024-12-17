@@ -65,7 +65,7 @@ class User extends Authenticatable implements AuthenticatableContract, Authoriza
         return $this->hasMany(Vehicle::class,'employee_id');
     }
 
-    public function project(){
+    public function projects(){
         return $this->belongsToMany(Project::class,'employee_projects','employee_id','project_id','id','id');
     }
 }

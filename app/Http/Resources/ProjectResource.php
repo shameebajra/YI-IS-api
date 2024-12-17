@@ -17,7 +17,10 @@ class ProjectResource extends JsonResource
         return [
             'name'=> $this->name,
             'year_of_start'=>$this->year_of_start,
-            'is_domestic'=>$this->is_domestic
+            'is_domestic'=>$this->is_domestic,
+            'employees' => $this->whenLoaded('users', function () {
+                return $this->users;
+            }),
         ];
     }
 }
