@@ -17,7 +17,7 @@ class VehicleResource extends JsonResource
         return [
                 'number_plate'=>$this->number_plate,
                 'vehicle_info'=> $this->vehicle_info,
-                'employee_id'=> $this->employee_id,
+                'owner' => $this->user ? $this->user->name : null,
         ];
     }
 }

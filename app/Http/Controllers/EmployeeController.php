@@ -18,10 +18,10 @@ class EmployeeController extends CustomResponseController
 {
     protected $csvService;
 
-    public function __construct()
-    {
+   public function __construct()
+   {
         $this->csvService = new CSVService('users.csv');
-    }
+   }
 
     /**
      * Display a listing of the resource.
@@ -29,10 +29,10 @@ class EmployeeController extends CustomResponseController
     public function index(Request $request)
     {
         try {
-            $limit = $request->query('limit', "100");
+            $limit = $request->query('limit', "25");
             $page = $request->query('page', default: "1");
 
-            $employees = User::paginate($limit, ['*'], 'page', $page);
+            $employees = User::with('vehicles','projects')->paginate($limit, ['*'], 'page', $page);
 
             if ($employees->isEmpty()) {
                 return $this->customFailureResponse(404,"No employee found." , ['employees'=>[]] );
@@ -52,7 +52,7 @@ class EmployeeController extends CustomResponseController
     public function store(Request $request)
     {
         try {
-            //read csv file from service
+            //read csv file from service and create user
             $this->csvService->createUserArr();
 
             return $this->customSuccessResponse(201,"Employee created successfully." , [] );
@@ -66,15 +66,15 @@ class EmployeeController extends CustomResponseController
     /**
      * Display the specified resource.
      */
-    public function show(User $employee)
+    public function show(User $employee) //Route Model Binding
     {
       try {
             if (Gate::allows('fetchEmployee', $employee)) {
-               $employee = $employee->load('vehicles');
+               $employee = $employee->load('vehicles','projects');
 
                 return $this->customSuccessResponse(200,"Employee fetched successfully." , ['employee'=>new EmployeeResource($employee)] );
             }else{
-                return $this->customFailureResponse(403,"Unauthorized access.", [] );
+                return $this->customFailureResponse(403,"You do not have access rights.", [] );
             }
         } catch (Exception $e) {
             Log::error('Error fetching employee: ' . $e->getMessage());
@@ -89,16 +89,13 @@ class EmployeeController extends CustomResponseController
     public function update(EmployeeRequest $request, User $employee)
     {
         try {
-            // $employee = User::findOrFail($id);
-
             if (Gate::allows('updateEmployee', $employee)) {
                 $updatable = $this->getUpdatables($request->toArray());
                 $employee->update($updatable);
 
                 return $this->customSuccessResponse(200,"Employee updated successfully." , ['employee'=>new EmployeeResource($employee)] );
             }else{
-                return $this->customFailureResponse(403,"Unauthorized access.", [] );
-
+                return $this->customFailureResponse(403,"You do not have access rights.", [] );
             }
         } catch (Exception $e) {
             Log::error('Error updating employee: ' . $e->getMessage());
@@ -107,9 +104,9 @@ class EmployeeController extends CustomResponseController
         }
     }
 
-    public function getUpdatables($requestValues)
+     public function getUpdatables($requestData)
     {
-        $updatableKeys = [
+        $updatableFields = [
             'name',
             'password',
             'gender',
@@ -117,15 +114,15 @@ class EmployeeController extends CustomResponseController
             'role_id',
         ];
 
-        $returnValue = [];
+        $updatedValues = [];
 
-        foreach ($updatableKeys as $updatableValue) {
-            if (array_key_exists($updatableValue, $requestValues)) {
-                $returnValue[$updatableValue] = $requestValues[$updatableValue];
+        foreach ($updatableFields as $field) {
+            if (array_key_exists($field, $requestData)) {
+                $updatedValues[$field] = $requestData[$field];
             }
         }
 
-        return $returnValue;
+        return $updatedValues;
     }
 
     /**
@@ -139,7 +136,7 @@ class EmployeeController extends CustomResponseController
 
                 return $this->customSuccessResponse(200,"Employee deleted successfully." , [] );
             }else{
-                return $this->customFailureResponse(403,"Unauthorized access.", [] );
+                return $this->customFailureResponse(403,"You do not have access rights.", [] );
             }
         } catch (Exception $e) {
             Log::error('Error deleting employee: ' . $e->getMessage());
@@ -151,7 +148,6 @@ class EmployeeController extends CustomResponseController
     public function storeEmployees(Request $request){
         try{
             $payload = $request->get('data');
-            // $employees = $payload["employees"];
             $employees = Arr::get($payload, 'employees', []);
 
             User::insert($employees);
@@ -169,15 +165,12 @@ class EmployeeController extends CustomResponseController
         try{
             $ids = $request->get('ids');
 
-            // Convert string to array
             $idsArray = explode(',', preg_replace('/[\[\] ]/', '', subject: $ids));
 
             $existingIds =User::whereIn('id', $idsArray)->pluck('id')->toArray();
 
-            // Check if query IDs exist in the database
             $missingIds = array_diff($idsArray, $existingIds);
 
-            // If there are any missing IDs
             if (!empty($missingIds)) {
                 return $this->customFailureResponse(404,"The following employee IDs do not exist: " . implode(", ", $missingIds), ["employees"=>[]] );
             }
@@ -190,7 +183,7 @@ class EmployeeController extends CustomResponseController
                         "message" => "Employee records deleted successfully"
                     ],200);
             }else{
-                 return $this->customFailureResponse(403,"Unauthorized access.", [] );
+                 return $this->customFailureResponse(403,"You do not have access rights.", [] );
             }
         } catch (Exception $e) {
             DB::rollBack();

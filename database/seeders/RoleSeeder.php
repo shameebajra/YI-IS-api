@@ -22,8 +22,6 @@ class RoleSeeder extends Seeder
             ['name'=> RoleName::SEI, 'weight'=> RoleWeight::SEI],
             ['name'=> RoleName::SEII, 'weight'=> RoleWeight::SEII],
             ['name'=> RoleName::INTERN, 'weight'=> RoleWeight::INTERN],
-
-
         ];
 
         DB::table('roles')->insert($roles);
